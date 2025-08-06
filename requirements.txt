@@ -1,0 +1,32 @@
+# RedSentinel AI - Requirements
+
+# Core dependencies
+requests>=2.31.0
+dnspython>=2.4.0
+
+# AI/ML dependencies
+google-genai>=0.3.0
+
+# Browser automation (optional)
+playwright>=1.40.0
+
+# Async support
+asyncio
+
+# JSON handling
+json5>=0.9.0
+
+# Network utilities
+ipaddress
+
+# Additional security tools integration
+# python-nmap>=0.7.1
+
+# Development dependencies (optional)
+# pytest>=7.0.0
+# black>=23.0.0
+# mypy>=1.0.0
+
+# Report generation (optional)
+# reportlab>=4.0.0
+# weasyprint>=60.0.0

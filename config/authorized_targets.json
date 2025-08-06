@@ -1,0 +1,28 @@
+{
+  "domains": [
+    "example.com",
+    "testphp.vulnweb.com",
+    "demo.testfire.net",
+    "localhost"
+  ],
+  "ip_ranges": [
+    "192.168.0.0/16",
+    "10.0.0.0/8",
+    "172.16.0.0/12",
+    "127.0.0.0/8"
+  ],
+  "urls": [
+    "http://testphp.vulnweb.com/",
+    "http://demo.testfire.net/",
+    "http://localhost"
+  ],
+  "explicitly_authorized": [],
+  "_note": "Add your authorized targets here. Only test targets you own or have explicit permission to test.",
+  "_warning": "Unauthorized testing is illegal and unethical.",
+  "_examples": {
+    "domains": "Add domains like 'mycompany.com' for subdomain testing",
+    "ip_ranges": "Add IP ranges like '203.0.113.0/24' for network testing",
+    "urls": "Add specific URLs like 'https://app.mycompany.com/test'",
+    "explicitly_authorized": "Add specific targets that have been explicitly authorized"
+  }
+}

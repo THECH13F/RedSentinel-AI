@@ -1,0 +1,47 @@
+{
+  "api": {
+    "gemini_api_key": "",
+    "timeout": 30,
+    "max_retries": 3
+  },
+  "scanning": {
+    "default_level": "standard",
+    "default_ai_mode": "assist",
+    "rate_limit": {
+      "requests_per_second": 2,
+      "concurrent_requests": 1
+    },
+    "timeouts": {
+      "nmap": 300,
+      "nikto": 600,
+      "sqlmap": 1800,
+      "browser_test": 120
+    }
+  },
+  "output": {
+    "default_format": "html",
+    "output_directory": "./reports",
+    "include_screenshots": false
+  },
+  "ethical": {
+    "whitelist_file": "config/authorized_targets.json",
+    "require_confirmation": true,
+    "auto_report_mode": false
+  },
+  "tools": {
+    "nmap_path": "nmap",
+    "sqlmap_path": "sqlmap",
+    "nikto_path": "nikto",
+    "wpscan_path": "wpscan",
+    "gobuster_path": "gobuster"
+  },
+  "browser": {
+    "headless": true,
+    "timeout": 30000,
+    "viewport": {
+      "width": 1280,
+      "height": 720
+    },
+    "user_agent": "RedSentinel-BrowserAgent/1.0"
+  }
+}
