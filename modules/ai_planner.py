@@ -1,6 +1,7 @@
 """
 AI Planner Module
 Handles AI-powered attack planning, CVE searching, payload generation, and exploitation guidance.
+Version: 1.0.2
 """
 
 import json
@@ -51,17 +52,15 @@ class AIPlanner:
         
         try:
             prompt = self._build_scan_plan_prompt(target, level, modules, tools)
+            self.logger.info(f"[AIPlanner] Sending scan plan prompt to Gemini:\n{prompt}")
             response = self.model.models.generate_content(
                 model="gemini-2.0-flash-exp",
                 contents=prompt
             )
-            
-            # Parse AI response and create structured plan
+            self.logger.info(f"[AIPlanner] Gemini response for scan plan:\n{response.text}")
             plan = self._parse_scan_plan_response(response.text or "")
-            
-            self.logger.info(f"AI scan plan created for target: {target}")
+            self.logger.info(f"[AIPlanner] AI scan plan created for target: {target}: {json.dumps(plan, indent=2)}")
             return plan
-            
         except Exception as e:
             self.logger.error(f"AI scan planning failed: {str(e)}")
             return self._create_default_scan_plan(target, level, modules, tools)
@@ -204,14 +203,13 @@ Please provide:
 
 Format as JSON array of CVE objects.
 """
-            
+            self.logger.info(f"[AIPlanner] Sending CVE search prompt to Gemini:\n{prompt}")
             response = self.model.models.generate_content(
                 model="gemini-2.0-flash-exp",
                 contents=prompt
             )
-            # Parse and return CVE information
+            self.logger.info(f"[AIPlanner] Gemini response for CVE search:\n{response.text}")
             return self._parse_cve_response(response.text or "")
-            
         except Exception as e:
             self.logger.error(f"CVE search failed: {str(e)}")
             return []
@@ -239,13 +237,13 @@ IMPORTANT: This is for authorized ethical testing only. Include appropriate warn
 
 Format as JSON with clear structure.
 """
-            
+            self.logger.info(f"[AIPlanner] Sending payload generation prompt to Gemini:\n{prompt}")
             response = self.model.models.generate_content(
                 model="gemini-2.0-flash-exp",
                 contents=prompt
             )
+            self.logger.info(f"[AIPlanner] Gemini response for payload generation:\n{response.text}")
             return self._parse_payload_response(response.text or "")
-            
         except Exception as e:
             self.logger.error(f"Payload generation failed: {str(e)}")
             return {}
@@ -277,13 +275,13 @@ Focus on safe, ethical testing practices. Include warnings about potential impac
 
 Format response as JSON with structured exploitation plan.
 """
-            
+            self.logger.info(f"[AIPlanner] Sending exploitation prompt to Gemini:\n{prompt}")
             response = self.model.models.generate_content(
                 model="gemini-2.0-flash-exp",
                 contents=prompt
             )
+            self.logger.info(f"[AIPlanner] Gemini response for exploitation:\n{response.text}")
             return self._parse_exploitation_response(response.text or "")
-            
         except Exception as e:
             self.logger.error(f"AI exploitation guidance failed: {str(e)}")
             return {"status": "error", "message": str(e)}

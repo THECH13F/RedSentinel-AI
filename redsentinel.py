@@ -2,10 +2,9 @@
 """
 RedSentinel AI - Ethical Hacking Security Agent
 Author: RedSentinel AI Team
-Version: 1.0.0
+Version: 1.0.2
 
 AI-powered offensive security tool for ethical hacking and cybersecurity research.
-For authorized targets only - CTFs, test environments, bug bounties with permission.
 """
 
 import argparse
@@ -166,7 +165,7 @@ Examples:
         parser.add_argument(
             '--version', 
             action='version', 
-            version='RedSentinel AI v1.0.0'
+            version='RedSentinel AI v1.0.2'
         )
         
         parser.add_argument(
@@ -198,7 +197,7 @@ Examples:
             logging.getLogger().setLevel(logging.DEBUG)
     
     def run_scan(self, args: argparse.Namespace) -> Dict:
-        """Main scan execution logic"""
+        """Main scan execution logic (fully verbose, all actions and payloads shown)"""
         results = {
             'target': args.url or args.ip,
             'scan_level': args.level,
@@ -207,85 +206,82 @@ Examples:
             'modules_run': [],
             'findings': []
         }
-        
         try:
             # Phase 1: AI Planning
             if args.ai_mode != 'off':
-                self.logger.info("Starting AI-powered attack planning...")
+                self.logger.info("[RedSentinel] Starting AI-powered attack planning...")
                 scan_plan = self.ai_planner.create_scan_plan(
                     target=args.url or args.ip,
                     level=args.level,
                     modules=args.modules,
                     tools=args.tools
                 )
+                self.logger.info(f"[RedSentinel] AI scan plan generated: {json.dumps(scan_plan, indent=2)}")
                 results['scan_plan'] = scan_plan
-            
             # Phase 2: Reconnaissance
             if not args.modules or 'recon' in args.modules:
-                self.logger.info("Starting reconnaissance phase...")
+                self.logger.info("[RedSentinel] Starting reconnaissance phase...")
                 recon_results = self.recon_engine.run_reconnaissance(
                     target=args.url or args.ip,
                     level=args.level
                 )
+                self.logger.info(f"[RedSentinel] Reconnaissance results: {json.dumps(recon_results, indent=2)}")
                 results['recon'] = recon_results
                 results['modules_run'].append('recon')
-            
             # Phase 3: Vulnerability Scanning
             if not args.modules or 'vuln-scan' in args.modules:
                 if not args.report_only:
-                    self.logger.info("Starting vulnerability scanning...")
+                    self.logger.info("[RedSentinel] Starting vulnerability scanning...")
                     vuln_results = self.tool_runner.run_vulnerability_scan(
                         target=args.url or args.ip,
                         tools=args.tools
                     )
+                    self.logger.info(f"[RedSentinel] Vulnerability scan results: {json.dumps(vuln_results, indent=2)}")
                     results['vulnerabilities'] = vuln_results
                     results['modules_run'].append('vuln-scan')
-            
             # Phase 4: Web Application Testing
             if not args.modules or 'web-scan' in args.modules:
                 if args.url and not args.report_only:
-                    self.logger.info("Starting web application testing...")
+                    self.logger.info("[RedSentinel] Starting web application testing...")
                     web_results = self.tool_runner.run_web_scan(
                         url=args.url,
                         wordlist=args.wordlist
                     )
+                    self.logger.info(f"[RedSentinel] Web scan results: {json.dumps(web_results, indent=2)}")
                     results['web_testing'] = web_results
                     results['modules_run'].append('web-scan')
-            
             # Phase 5: Browser-based Testing
             if not args.modules or 'browser' in args.modules:
                 if args.url and not args.report_only:
-                    self.logger.info("Starting browser-based testing...")
+                    self.logger.info("[RedSentinel] Starting browser-based testing...")
                     browser_results = self.browser_agent.run_browser_tests(
                         url=args.url
                     )
+                    self.logger.info(f"[RedSentinel] Browser testing results: {json.dumps(browser_results, indent=2)}")
                     results['browser_testing'] = browser_results
                     results['modules_run'].append('browser')
-            
             # Phase 6: AI-Guided Exploitation (if not report-only)
             if not args.modules or 'exploit' in args.modules:
                 if not args.report_only and args.ai_mode in ['smart', 'autonomous']:
                     if args.confirm:
                         confirm = input("Proceed with exploitation phase? (y/N): ")
                         if confirm.lower() != 'y':
-                            self.logger.info("Exploitation phase skipped by user")
+                            self.logger.info("[RedSentinel] Exploitation phase skipped by user")
                             return results
-                    
-                    self.logger.info("Starting AI-guided exploitation...")
+                    self.logger.info("[RedSentinel] Starting AI-guided exploitation...")
                     exploit_results = self.ai_planner.run_exploitation(
                         target=args.url or args.ip,
                         vulnerabilities=results.get('vulnerabilities', [])
                     )
+                    self.logger.info(f"[RedSentinel] Exploitation results: {json.dumps(exploit_results, indent=2)}")
                     results['exploitation'] = exploit_results
                     results['modules_run'].append('exploit')
-            
             return results
-            
         except KeyboardInterrupt:
-            self.logger.warning("Scan interrupted by user")
+            self.logger.warning("[RedSentinel] Scan interrupted by user")
             return results
         except Exception as e:
-            self.logger.error(f"Scan failed: {str(e)}")
+            self.logger.error(f"[RedSentinel] Scan failed: {str(e)}")
             if args.debug:
                 raise
             return results
@@ -341,7 +337,7 @@ Examples:
     AI-Powered Ethical Hacking Agent
         """
         print(banner)
-        print("Version 1.0.0 | For Authorized Testing Only")
+        print("Version 1.0.2 | All actions and payloads are shown to the user.")
         print("-" * 50)
 
 if __name__ == "__main__":

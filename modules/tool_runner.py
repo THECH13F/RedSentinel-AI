@@ -1,6 +1,7 @@
 """
 Tool Runner Module
 Handles execution of external security tools like nmap, sqlmap, nikto, etc.
+Version: 1.0.2
 """
 
 import subprocess
@@ -120,25 +121,24 @@ class ToolRunner:
         return results
     
     def _run_nmap_scan(self, target: str) -> Dict[str, Any]:
-        """Run nmap port scan with service detection"""
+        """Run nmap port scan with service detection (fully verbose)"""
         try:
-            # Basic nmap command with service detection
             cmd = [
                 'nmap',
-                '-sV',  # Service version detection
-                '-sC',  # Default scripts
-                '--script=vuln',  # Vulnerability scripts
-                '-oX', '-',  # XML output to stdout
+                '-sV',
+                '-sC',
+                '--script=vuln',
+                '-oX', '-',
                 target
             ]
-            
+            self.logger.info(f"[ToolRunner] Running command: {' '.join(cmd)}")
             result = subprocess.run(
                 cmd,
                 capture_output=True,
                 text=True,
-                timeout=300  # 5 minute timeout
+                timeout=300
             )
-            
+            self.logger.info(f"[ToolRunner] nmap output:\n{result.stdout}")
             if result.returncode == 0:
                 return {
                     'status': 'success',
@@ -152,113 +152,111 @@ class ToolRunner:
                     'error': result.stderr,
                     'command': ' '.join(cmd)
                 }
-                
         except subprocess.TimeoutExpired:
+            self.logger.error("[ToolRunner] Nmap scan timed out")
             return {'status': 'timeout', 'error': 'Nmap scan timed out'}
         except Exception as e:
+            self.logger.error(f"[ToolRunner] Nmap scan failed: {str(e)}")
             return {'status': 'error', 'error': str(e)}
     
     def _run_nikto_scan(self, target: str) -> Dict[str, Any]:
-        """Run nikto web vulnerability scan"""
+        """Run nikto web vulnerability scan (fully verbose)"""
         try:
-            # Ensure target has protocol
             if not target.startswith(('http://', 'https://')):
                 target = f"http://{target}"
-            
             cmd = [
                 'nikto',
                 '-h', target,
                 '-output', '-',
                 '-Format', 'json'
             ]
-            
+            self.logger.info(f"[ToolRunner] Running command: {' '.join(cmd)}")
             result = subprocess.run(
                 cmd,
                 capture_output=True,
                 text=True,
-                timeout=600  # 10 minute timeout
+                timeout=600
             )
-            
+            self.logger.info(f"[ToolRunner] nikto output:\n{result.stdout}")
             return {
                 'status': 'success' if result.returncode == 0 else 'completed_with_findings',
                 'output': result.stdout,
                 'stderr': result.stderr,
                 'command': ' '.join(cmd)
             }
-            
         except subprocess.TimeoutExpired:
+            self.logger.error("[ToolRunner] Nikto scan timed out")
             return {'status': 'timeout', 'error': 'Nikto scan timed out'}
         except Exception as e:
+            self.logger.error(f"[ToolRunner] Nikto scan failed: {str(e)}")
             return {'status': 'error', 'error': str(e)}
     
     def _run_sqlmap_scan(self, target: str) -> Dict[str, Any]:
-        """Run sqlmap SQL injection scan"""
+        """Run sqlmap SQL injection scan (fully verbose)"""
         try:
-            # Ensure target has protocol
             if not target.startswith(('http://', 'https://')):
                 target = f"http://{target}"
-            
             cmd = [
                 'sqlmap',
                 '-u', target,
-                '--batch',  # Non-interactive mode
-                '--crawl=2',  # Crawl depth
-                '--level=1',  # Test level
-                '--risk=1',   # Risk level
+                '--batch',
+                '--crawl=2',
+                '--level=1',
+                '--risk=1',
                 '--output-dir', tempfile.gettempdir()
             ]
-            
+            self.logger.info(f"[ToolRunner] Running command: {' '.join(cmd)}")
             result = subprocess.run(
                 cmd,
                 capture_output=True,
                 text=True,
-                timeout=1800  # 30 minute timeout
+                timeout=1800
             )
-            
+            self.logger.info(f"[ToolRunner] sqlmap output:\n{result.stdout}")
             return {
                 'status': 'success' if result.returncode == 0 else 'completed_with_findings',
                 'output': result.stdout,
                 'stderr': result.stderr,
                 'command': ' '.join(cmd)
             }
-            
         except subprocess.TimeoutExpired:
+            self.logger.error("[ToolRunner] SQLMap scan timed out")
             return {'status': 'timeout', 'error': 'SQLMap scan timed out'}
         except Exception as e:
+            self.logger.error(f"[ToolRunner] SQLMap scan failed: {str(e)}")
             return {'status': 'error', 'error': str(e)}
     
     def _run_wpscan_scan(self, target: str) -> Dict[str, Any]:
-        """Run WPScan for WordPress vulnerability scanning"""
+        """Run WPScan for WordPress vulnerability scanning (fully verbose)"""
         try:
-            # Ensure target has protocol
             if not target.startswith(('http://', 'https://')):
                 target = f"http://{target}"
-            
             cmd = [
                 'wpscan',
                 '--url', target,
-                '--enumerate', 'vp,vt,u',  # Vulnerable plugins, themes, users
+                '--enumerate', 'vp,vt,u',
                 '--format', 'json',
                 '--no-banner'
             ]
-            
+            self.logger.info(f"[ToolRunner] Running command: {' '.join(cmd)}")
             result = subprocess.run(
                 cmd,
                 capture_output=True,
                 text=True,
-                timeout=900  # 15 minute timeout
+                timeout=900
             )
-            
+            self.logger.info(f"[ToolRunner] wpscan output:\n{result.stdout}")
             return {
                 'status': 'success' if result.returncode == 0 else 'completed_with_findings',
                 'output': result.stdout,
                 'stderr': result.stderr,
                 'command': ' '.join(cmd)
             }
-            
         except subprocess.TimeoutExpired:
+            self.logger.error("[ToolRunner] WPScan timed out")
             return {'status': 'timeout', 'error': 'WPScan timed out'}
         except Exception as e:
+            self.logger.error(f"[ToolRunner] WPScan failed: {str(e)}")
             return {'status': 'error', 'error': str(e)}
     
     def run_web_scan(self, url: str, wordlist: Optional[str] = None) -> Dict[str, Any]:

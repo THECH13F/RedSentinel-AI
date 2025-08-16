@@ -1,6 +1,7 @@
 """
 Browser Agent Module
 Handles browser-based testing using Puppeteer/Playwright for XSS, CSRF, and client-side testing.
+Version: 1.0.2
 """
 
 import asyncio
@@ -53,11 +54,11 @@ class BrowserAgent:
         return results
     
     async def _run_async_tests(self, url: str, results: Dict[str, Any]):
-        """Run asynchronous browser tests (verbose logging)"""
+        """Run asynchronous browser tests (verbose logging, non-headless mode)"""
         from playwright.async_api import async_playwright
         async with async_playwright() as p:
-            self.logger.info("[BrowserAgent] Launching Chromium browser (headless mode)...")
-            browser = await p.chromium.launch(headless=True)
+            self.logger.info("[BrowserAgent] Launching Chromium browser (visible window)...")
+            browser = await p.chromium.launch(headless=False)
             context = await browser.new_context(
                 user_agent='RedSentinel-BrowserAgent/1.0',
                 viewport={'width': 1280, 'height': 720}
@@ -153,18 +154,15 @@ class BrowserAgent:
             })
     
     async def _test_xss_vulnerabilities(self, page, url: str, results: Dict[str, Any]):
-        """Test for XSS vulnerabilities"""
+        """Test for XSS vulnerabilities (fully verbose)"""
         test_name = "xss_vulnerability_test"
         self.logger.info(f"Running {test_name}...")
-        
         try:
             test_result = {
                 'test': test_name,
                 'status': 'completed',
                 'findings': []
             }
-            
-            # Common XSS payloads
             xss_payloads = [
                 '<script>alert("XSS")</script>',
                 '"><script>alert("XSS")</script>',
@@ -173,34 +171,23 @@ class BrowserAgent:
                 '<img src=x onerror=alert("XSS")>',
                 '<svg onload=alert("XSS")>'
             ]
-            
-            # Find input fields and test them
             await page.goto(url)
-            
-            # Find all input elements
             inputs = await page.query_selector_all('input[type="text"], input[type="search"], textarea')
-            
             for i, input_elem in enumerate(inputs):
-                for payload in xss_payloads[:2]:  # Test only first 2 payloads to avoid too many requests
+                for payload in xss_payloads[:2]:
                     try:
-                        # Set up alert dialog handler
+                        self.logger.info(f"[BrowserAgent] Testing XSS payload in input {i+1}: {payload}")
                         dialog_triggered = False
-                        
                         async def handle_dialog(dialog):
                             nonlocal dialog_triggered
                             dialog_triggered = True
                             await dialog.dismiss()
-                        
                         page.on('dialog', handle_dialog)
-                        
-                        # Fill input with XSS payload
                         await input_elem.fill(payload)
                         await input_elem.press('Enter')
-                        
-                        # Wait briefly for potential XSS execution
                         await page.wait_for_timeout(1000)
-                        
                         if dialog_triggered:
+                            self.logger.info(f"[BrowserAgent] XSS triggered in input {i+1} with payload: {payload}")
                             test_result['findings'].append({
                                 'type': 'xss_vulnerability',
                                 'severity': 'high',
@@ -208,21 +195,18 @@ class BrowserAgent:
                                 'payload': payload,
                                 'recommendation': 'Implement proper input validation and output encoding'
                             })
-                            break  # Found XSS, no need to test more payloads on this input
-                        
+                            break
                         page.remove_listener('dialog', handle_dialog)
-                        
                     except Exception as e:
-                        self.logger.debug(f"XSS test error on input {i}: {str(e)}")
+                        self.logger.error(f"[BrowserAgent] XSS test error on input {i}: {str(e)}")
                         continue
-            
-            # Test URL parameters for reflected XSS
             try:
                 test_url = f"{url}?test=<script>alert('XSS')</script>"
+                self.logger.info(f"[BrowserAgent] Testing reflected XSS with URL: {test_url}")
                 response = await page.goto(test_url)
                 content = await page.content()
-                
                 if '<script>alert(\'XSS\')</script>' in content:
+                    self.logger.info(f"[BrowserAgent] Reflected XSS found in URL parameter!")
                     test_result['findings'].append({
                         'type': 'reflected_xss',
                         'severity': 'high',
@@ -230,11 +214,9 @@ class BrowserAgent:
                         'recommendation': 'Sanitize URL parameters before reflecting in page content'
                     })
             except Exception as e:
-                self.logger.debug(f"Reflected XSS test error: {str(e)}")
-            
+                self.logger.error(f"[BrowserAgent] Reflected XSS test error: {str(e)}")
             results['tests_run'].append(test_result)
             results['vulnerabilities'].extend(test_result['findings'])
-            
         except Exception as e:
             self.logger.error(f"XSS testing failed: {str(e)}")
             results['tests_run'].append({

@@ -1,6 +1,7 @@
 """
 Reconnaissance Engine Module
 Handles passive and active information gathering about targets.
+Version: 1.0.2
 """
 
 import subprocess
@@ -165,35 +166,30 @@ class ReconEngine:
         }
     
     def _basic_port_scan(self, target: str) -> Dict[str, Any]:
-        """Perform basic port scanning"""
+        """Perform basic port scanning (fully verbose)"""
         port_info = {
             'open_ports': [],
             'closed_ports': [],
             'scan_type': 'basic'
         }
-        
         try:
-            # Extract IP/hostname
             if target.startswith(('http://', 'https://')):
                 hostname = urlparse(target).hostname or target
             else:
                 hostname = target
-            
-            # Common ports to scan
             common_ports = [21, 22, 23, 25, 53, 80, 110, 111, 135, 139, 143, 443, 993, 995, 1723, 3306, 3389, 5432, 5900, 8080]
-            
             for port in common_ports:
+                self.logger.info(f"[ReconEngine] Scanning port {port} on {hostname}...")
                 if self._is_port_open(hostname, port):
+                    self.logger.info(f"[ReconEngine] Port {port} is OPEN on {hostname}")
                     port_info['open_ports'].append(port)
                 else:
+                    self.logger.info(f"[ReconEngine] Port {port} is CLOSED on {hostname}")
                     port_info['closed_ports'].append(port)
-            
-            self.logger.debug(f"Port scan completed. Open ports: {port_info['open_ports']}")
-            
+            self.logger.info(f"[ReconEngine] Port scan completed. Open ports: {port_info['open_ports']}")
         except Exception as e:
             self.logger.error(f"Port scanning failed: {str(e)}")
             port_info['error'] = str(e)
-        
         return port_info
     
     def _is_port_open(self, hostname: str, port: int, timeout: int = 3) -> bool:
