@@ -29,65 +29,61 @@ class BrowserAgent:
             self.logger.warning("Playwright not available. Install with: pip install playwright")
     
     def run_browser_tests(self, url: str) -> Dict[str, Any]:
-        """Run comprehensive browser-based security tests"""
+        """Run comprehensive browser-based security tests (verbose logging)"""
         if not self.playwright_available:
+            self.logger.error("Playwright not installed. Install with: pip install playwright && playwright install")
             return {
                 'error': 'Playwright not installed',
                 'message': 'Install with: pip install playwright && playwright install'
             }
-        
+        self.logger.info(f"[BrowserAgent] Starting browser-based tests for: {url}")
         results = {
             'target': url,
             'timestamp': datetime.now().isoformat(),
             'tests_run': [],
             'vulnerabilities': []
         }
-        
         try:
-            # Run async browser tests
+            self.logger.info("[BrowserAgent] Launching browser and running async tests...")
             asyncio.run(self._run_async_tests(url, results))
-            
-            self.logger.info(f"Browser testing completed. Found {len(results['vulnerabilities'])} issues.")
-            
+            self.logger.info(f"[BrowserAgent] Browser testing completed. Found {len(results['vulnerabilities'])} issues.")
         except Exception as e:
-            self.logger.error(f"Browser testing failed: {str(e)}")
+            self.logger.error(f"[BrowserAgent] Browser testing failed: {str(e)}")
             results['error'] = str(e)
-        
         return results
     
     async def _run_async_tests(self, url: str, results: Dict[str, Any]):
-        """Run asynchronous browser tests"""
+        """Run asynchronous browser tests (verbose logging)"""
         from playwright.async_api import async_playwright
         async with async_playwright() as p:
-            # Launch browser
+            self.logger.info("[BrowserAgent] Launching Chromium browser (headless mode)...")
             browser = await p.chromium.launch(headless=True)
             context = await browser.new_context(
                 user_agent='RedSentinel-BrowserAgent/1.0',
                 viewport={'width': 1280, 'height': 720}
             )
-            
             try:
                 page = await context.new_page()
-                
+                self.logger.info(f"[BrowserAgent] Navigating to {url} for page security analysis...")
                 # Test 1: Basic page analysis
                 await self._analyze_page_security(page, url, results)
-                
+                self.logger.info(f"[BrowserAgent] Running XSS vulnerability tests on {url}...")
                 # Test 2: XSS testing
                 await self._test_xss_vulnerabilities(page, url, results)
-                
+                self.logger.info(f"[BrowserAgent] Running CSRF vulnerability tests on {url}...")
                 # Test 3: CSRF testing
                 await self._test_csrf_vulnerabilities(page, url, results)
-                
+                self.logger.info(f"[BrowserAgent] Analyzing JavaScript security on {url}...")
                 # Test 4: JavaScript analysis
                 await self._analyze_javascript_security(page, url, results)
-                
+                self.logger.info(f"[BrowserAgent] Analyzing cookie security on {url}...")
                 # Test 5: Cookie security
                 await self._analyze_cookie_security(page, url, results)
-                
+                self.logger.info(f"[BrowserAgent] Analyzing Content Security Policy on {url}...")
                 # Test 6: Content Security Policy
                 await self._analyze_csp(page, url, results)
-                
             finally:
+                self.logger.info("[BrowserAgent] Closing browser...")
                 await browser.close()
     
     async def _analyze_page_security(self, page, url: str, results: Dict[str, Any]):

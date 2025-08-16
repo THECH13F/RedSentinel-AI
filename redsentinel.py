@@ -185,32 +185,17 @@ Examples:
         return parser.parse_args()
     
     def validate_target(self, args: argparse.Namespace) -> bool:
-        """Validate target specification and ethical constraints"""
+        """Validate target specification (authorization checks removed)"""
         if not any([args.url, args.ip, args.target_file, args.list_tools]):
             self.logger.error("No target specified. Use --url, --ip, --target-file, or --list-tools")
             return False
-            
-        # Check ethical safeguards
-        if args.url or args.ip:
-            target = args.url or args.ip
-            if not self.ethical_safeguards.is_target_authorized(target):
-                self.logger.error(f"Target {target} is not authorized for testing")
-                return False
-                
         return True
     
     def setup_logging(self, args: argparse.Namespace):
-        """Configure logging based on verbosity level"""
-        if args.debug:
+        """Configure logging: always verbose by default"""
+        logging.getLogger().setLevel(logging.INFO)
+        if args.debug or args.verbose >= 3:
             logging.getLogger().setLevel(logging.DEBUG)
-        elif args.verbose >= 3:
-            logging.getLogger().setLevel(logging.DEBUG)
-        elif args.verbose >= 2:
-            logging.getLogger().setLevel(logging.INFO)
-        elif args.verbose >= 1:
-            logging.getLogger().setLevel(logging.WARNING)
-        else:
-            logging.getLogger().setLevel(logging.ERROR)
     
     def run_scan(self, args: argparse.Namespace) -> Dict:
         """Main scan execution logic"""
@@ -306,42 +291,31 @@ Examples:
             return results
     
     def main(self):
-        """Main entry point"""
+        """Main entry point (authorization checks and ethical warning removed)"""
         args = None
         try:
             # Parse arguments
             args = self.parse_arguments()
-            
-            # Setup logging
+            # Setup logging (always verbose)
             self.setup_logging(args)
-            
             # Handle utility commands
             if args.list_tools:
                 self.tool_runner.list_available_tools()
                 return 0
-            
-            # Validate target and ethical constraints
+            # Validate target (authorization checks removed)
             if not self.validate_target(args):
                 return 1
-            
             # Load configuration
             if args.config_file and os.path.exists(args.config_file):
                 self.config.load_from_file(args.config_file)
-            
             # Override API key if provided
             if args.api_key:
                 self.config.set_api_key(args.api_key)
-            
             # Display banner
             self.display_banner()
-            
-            # Display ethical warning
-            self.ethical_safeguards.display_ethical_warning()
-            
             # Run scan
             self.logger.info("Starting RedSentinel AI scan...")
             results = self.run_scan(args)
-            
             # Generate reports
             if results:
                 self.logger.info("Generating reports...")
@@ -350,10 +324,8 @@ Examples:
                     output_dir=args.output_dir,
                     format=args.report_format
                 )
-            
             self.logger.info("Scan completed successfully!")
             return 0
-            
         except Exception as e:
             self.logger.error(f"Fatal error: {str(e)}")
             if args is not None and hasattr(args, 'debug') and args.debug:

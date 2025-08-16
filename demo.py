@@ -40,12 +40,6 @@ def run_demo():
     print("Note: This is a safe demo using example.com")
     print()
     
-    # Check if target is authorized
-    if safeguards.is_target_authorized(demo_target):
-        print("✅ Target authorized for testing")
-    else:
-        print("⚠️ Target not in whitelist (demo mode)")
-    
     print()
     print("🔍 Starting basic reconnaissance...")
     

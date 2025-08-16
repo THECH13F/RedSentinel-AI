@@ -74,31 +74,24 @@ class ToolRunner:
         print("")
     
     def run_vulnerability_scan(self, target: str, tools: Optional[List[str]] = None) -> Dict[str, Any]:
-        """Run vulnerability scanning tools against target"""
+        """Run vulnerability scanning tools against target (verbose logging)"""
+        self.logger.info(f"[ToolRunner] Starting vulnerability scan for target: {target}")
         results = {
             'target': target,
             'timestamp': datetime.now().isoformat(),
             'scans_run': [],
             'vulnerabilities': []
         }
-        
-        # Default tools if none specified
         if not tools:
             tools = ['nmap', 'nikto']
-        
-        # Filter to only available tools
         available_tools = [tool for tool in tools if self.available_tools.get(tool, False)]
-        
         if not available_tools:
-            self.logger.warning("No requested tools are available")
+            self.logger.warning("[ToolRunner] No requested tools are available")
             results['error'] = "No requested tools available"
             return results
-        
         try:
-            # Run each tool
             for tool in available_tools:
-                self.logger.info(f"Running {tool} scan...")
-                
+                self.logger.info(f"[ToolRunner] Running {tool} scan...")
                 if tool == 'nmap':
                     scan_result = self._run_nmap_scan(target)
                 elif tool == 'nikto':
@@ -108,25 +101,22 @@ class ToolRunner:
                 elif tool == 'wpscan':
                     scan_result = self._run_wpscan_scan(target)
                 else:
-                    self.logger.warning(f"Tool {tool} not implemented yet")
+                    self.logger.warning(f"[ToolRunner] Tool {tool} not implemented yet")
                     continue
-                
+                self.logger.info(f"[ToolRunner] {tool} scan completed. Status: {scan_result.get('status', 'unknown')}")
                 results['scans_run'].append({
                     'tool': tool,
                     'result': scan_result,
                     'timestamp': datetime.now().isoformat()
                 })
-                
-                # Extract vulnerabilities from scan results
                 vulns = self._extract_vulnerabilities(tool, scan_result)
+                if vulns:
+                    self.logger.info(f"[ToolRunner] {tool} found {len(vulns)} vulnerabilities.")
                 results['vulnerabilities'].extend(vulns)
-            
-            self.logger.info(f"Vulnerability scanning completed. Found {len(results['vulnerabilities'])} potential issues.")
-            
+            self.logger.info(f"[ToolRunner] Vulnerability scanning completed. Found {len(results['vulnerabilities'])} potential issues.")
         except Exception as e:
-            self.logger.error(f"Vulnerability scanning failed: {str(e)}")
+            self.logger.error(f"[ToolRunner] Vulnerability scanning failed: {str(e)}")
             results['error'] = str(e)
-        
         return results
     
     def _run_nmap_scan(self, target: str) -> Dict[str, Any]:

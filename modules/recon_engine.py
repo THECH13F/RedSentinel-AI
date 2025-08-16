@@ -21,9 +21,8 @@ class ReconEngine:
         self.logger = logging.getLogger(__name__)
     
     def run_reconnaissance(self, target: str, level: str = 'standard') -> Dict[str, Any]:
-        """Run comprehensive reconnaissance based on target and level"""
-        self.logger.info(f"Starting reconnaissance for target: {target}")
-        
+        """Run comprehensive reconnaissance based on target and level (verbose logging)"""
+        self.logger.info(f"[ReconEngine] Starting reconnaissance for target: {target} (level: {level})")
         results = {
             'target': target,
             'target_type': self._identify_target_type(target),
@@ -31,29 +30,29 @@ class ReconEngine:
             'recon_level': level,
             'findings': {}
         }
-        
         try:
-            # Basic reconnaissance always performed
+            self.logger.info("[ReconEngine] Gathering basic info...")
             results['findings']['basic_info'] = self._gather_basic_info(target)
+            self.logger.info("[ReconEngine] Performing DNS reconnaissance...")
             results['findings']['dns_info'] = self._dns_reconnaissance(target)
+            self.logger.info("[ReconEngine] Performing basic port scan...")
             results['findings']['port_scan'] = self._basic_port_scan(target)
-            
-            # Additional recon based on level
             if level in ['standard', 'deep']:
+                self.logger.info("[ReconEngine] Detecting services...")
                 results['findings']['service_detection'] = self._service_detection(target)
+                self.logger.info("[ReconEngine] Performing web reconnaissance...")
                 results['findings']['web_info'] = self._web_reconnaissance(target)
-            
             if level == 'deep':
+                self.logger.info("[ReconEngine] Enumerating subdomains...")
                 results['findings']['subdomain_enum'] = self._subdomain_enumeration(target)
+                self.logger.info("[ReconEngine] Attempting OS detection...")
                 results['findings']['os_detection'] = self._os_detection(target)
+                self.logger.info("[ReconEngine] Looking for vulnerability hints...")
                 results['findings']['vulnerability_hints'] = self._vulnerability_reconnaissance(target)
-            
-            self.logger.info("Reconnaissance completed successfully")
-            
+            self.logger.info("[ReconEngine] Reconnaissance completed successfully")
         except Exception as e:
-            self.logger.error(f"Reconnaissance failed: {str(e)}")
+            self.logger.error(f"[ReconEngine] Reconnaissance failed: {str(e)}")
             results['error'] = str(e)
-        
         return results
     
     def _identify_target_type(self, target: str) -> str:
